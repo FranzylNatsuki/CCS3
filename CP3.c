@@ -21,6 +21,11 @@ void DisplayAllRecords(GROCERY ItemRecords[SIZE], int count);
 void structureSort(GROCERY ItemRecords[SIZE], int count);
 void typeSearch(GROCERY ItemRecords[SIZE], int count);
 void nameSearch(GROCERY ItemRecords[SIZE], int count);
+void deleteRecord(GROCERY ItemRecords[SIZE], int *count);
+void typeDelete(GROCERY ItemRecords[SIZE], int count);
+void nameDelete(GROCERY ItemRecords[SIZE], int count);
+void displayType(GROCERY ItemRecords[SIZE], int count);
+void displayManufacturer(GROCERY ItemRecords[SIZE], int count);
 
 int main(void) {
 	int choice;
@@ -38,14 +43,20 @@ int main(void) {
 	      		editRecord(ItemRecords, &recordCount);
 		        break;
 	      	case 3:
+	      		deleteRecord(ItemRecords, &recordCount);
 		        break;
 	      	case 4:
+	      		displayType(ItemRecords, recordCount);
 		        break;
 	      	case 5:
+	      		displayManufacturer(ItemRecords, recordCount);
 		        break;
 	      	case 6:
 		        DisplayAllRecords(ItemRecords, recordCount);
 		        break;
+		    case 7:
+		    	return 0;
+		    	break;
 	    }
 		if (choice != 7 && (choice < 1 || choice > 7)) {
 			printf("Invalid Input, Press [Enter] to Retry");
@@ -131,7 +142,7 @@ void addRecord(GROCERY ItemRecords[SIZE], int *count) {
 			system("cls");
 		}
 		else if (duplicateCheck == 1) {
-			printf("Already an existing item code, press enter to retry");
+			printf("Already an existing item name, press enter to retry");
 			getch();
 			system("cls");
 		}
@@ -169,7 +180,6 @@ void addRecord(GROCERY ItemRecords[SIZE], int *count) {
 	do {
 		printf("Price:");
 		scanf("%f", &price);
-		getchar();
 		if (price <= 0) {
 			printf("Price should not be zero");
 			getch();
@@ -182,7 +192,6 @@ void addRecord(GROCERY ItemRecords[SIZE], int *count) {
 
 	printf("Stock:");
 	scanf("%d", &stock);
-	getchar();
 	ItemRecords[*count].currentStock = stock;
 	system("cls");
 
@@ -248,8 +257,10 @@ void typeSearch(GROCERY ItemRecords[SIZE], int count) {
 
 	printf("Item Type:");
 	getchar();
-	gets(search);
-
+    // Use fgets() instead of gets() due to some buffer overflow problems
+    fgets(search, sizeof(search), stdin);
+    search[strcspn(search, "\n")] = '\0';
+	
 	int found = 0;
 
 	printf("Item Type: %s\n", search);
@@ -272,6 +283,7 @@ void typeSearch(GROCERY ItemRecords[SIZE], int count) {
 			printf("1 Price:\n");
 			printf("2 Stock:\n");
 			scanf("%d", &choice);
+			getchar();
 			if (choice < 1 || choice >2) {
 				printf("Invalid Input, Press [Enter] to Retry");
 				getch();
@@ -284,6 +296,7 @@ void typeSearch(GROCERY ItemRecords[SIZE], int count) {
 			do {
 				printf("Price:");
 				scanf("%f", &price);
+				getchar();
 				ItemRecords[searchIndex].price = price;
 					if (price <= 0) {
 						printf("Price should not be zero");
@@ -304,11 +317,11 @@ void typeSearch(GROCERY ItemRecords[SIZE], int count) {
 		}
 	}
 
-	if (found > 1) {
+	else if (found > 1) {
 		nameSearch(ItemRecords, count);
 	}
 
-	if (found == 0) {
+	else if (found == 0) {
 		printf("No Result Found. Press [Enter] to proceed");
 		getch();
 		system("cls");
@@ -316,12 +329,14 @@ void typeSearch(GROCERY ItemRecords[SIZE], int count) {
 }
 
 void nameSearch(GROCERY ItemRecords[SIZE], int count) {
-	char search[15];
-	int i, searchcheck, searchIndex;
+    char search[15];
+    int i, searchcheck, searchIndex;
 
-	printf("Item Name:");
-	getchar();
-	gets(search);
+    printf("Item Name: ");
+    getchar();
+    // swapping gets() for fgets() due to buffer issues only on this part (after finding more than 1 of the same type)
+    fgets(search, sizeof(search), stdin); 
+    search[strcspn(search, "\n")] = '\0';
 
 	int found = 0;
 
@@ -382,4 +397,194 @@ void nameSearch(GROCERY ItemRecords[SIZE], int count) {
 		getch();
 		system("cls");
 	}
+}
+
+void deleteRecord(GROCERY ItemRecords[SIZE], int *count) {
+	int choice;
+	do {
+		printf("Search via Item Code or Item Name:\n");
+		printf("1. Item Type:\n");
+		printf("2. Item Name:\n");
+		scanf("%d", &choice);
+		switch (choice) {
+			case 1:
+				typeDelete(ItemRecords, *count);
+				break;
+			case 2:
+				nameDelete(ItemRecords, *count);
+				break;
+			default:
+				printf("Invalid Option, press [Enter] to retry");
+				getch();
+				system("cls");
+		}
+	} while (choice < 1 || choice > 2);
+}
+
+void typeDelete(GROCERY ItemRecords[SIZE], int count) {
+	char search[15];
+	int i, searchcheck, searchIndex;
+
+	printf("Item Type:");
+	getchar();
+    // Use fgets() instead of gets() due to some buffer overflow problems
+    fgets(search, sizeof(search), stdin);
+    search[strcspn(search, "\n")] = '\0';
+	
+	int found = 0;
+
+	printf("Item Type: %s\n", search);
+	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
+
+	for (i = 0; i < count; i++) {
+		searchcheck = strcmpi(ItemRecords[i].productType, search);
+
+		if (searchcheck == 0) {
+			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", ItemRecords[i].itemCode, ItemRecords[i].itemName, ItemRecords[i].manufacturer, ItemRecords[i].productType, ItemRecords[i].price, ItemRecords[i].currentStock);
+			found += 1;
+			searchIndex = i;
+		}
+	}
+
+	if (found == 1) {
+		char choice;
+		do {
+			printf("Confirm Delete (Data cannot be retrieved)? Y/n\n");
+			scanf("%c", &choice);
+			if (choice != 'Y' && choice != 'y' && choice != 'N' && choice != 'n') {
+				printf("Invalid Input, Press [Enter] to Retry");
+				getch();
+				system("cls");
+			}
+		} while (choice != 'Y' && choice != 'y' && choice != 'N' && choice != 'n');
+
+		if (choice == 'Y' || choice == 'y') {
+			for (i = searchIndex; i < count - 1; i++) {
+                ItemRecords[i] = ItemRecords[i + 1];
+            }
+			(count)--;
+			printf("Item successfully deleted!\n");
+			getch();
+			system("cls");
+			return;
+		}
+
+		else if (choice == 'Y' || choice == 'y') {
+			return;
+		}
+	}
+
+	else if (found > 1) {
+		nameDelete(ItemRecords, count);
+	}
+
+	else if (found == 0) {
+		printf("No Result Found. Press [Enter] to proceed");
+		getch();
+		system("cls");
+	}
+}
+
+void nameDelete(GROCERY ItemRecords[SIZE], int count) {
+    char search[15];
+    int i, searchcheck, searchIndex;
+
+    printf("Item Name: ");
+    getchar();
+    // swapping gets() for fgets() due to buffer issues only on this part (after finding more than 1 of the same type)
+    fgets(search, sizeof(search), stdin); 
+    search[strcspn(search, "\n")] = '\0';
+
+	int found = 0;
+
+	printf("Item Name: %s\n", search);
+	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
+
+	for (i = 0; i < count; i++) {
+		searchcheck = strcmpi(ItemRecords[i].itemName, search);
+
+		if (searchcheck == 0) {
+			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", ItemRecords[i].itemCode, ItemRecords[i].itemName, ItemRecords[i].manufacturer, ItemRecords[i].productType, ItemRecords[i].price, ItemRecords[i].currentStock);
+			found = 1;
+			searchIndex = i;
+		}
+	}
+
+	if (found == 1) {
+		char choice;
+		do {
+			printf("Confirm Delete (Data cannot be retrieved)? Y/n\n");
+			scanf("%c", &choice);
+			if (choice != 'Y' && choice != 'y' && choice != 'N' && choice != 'n') {
+				printf("Invalid Input, Press [Enter] to Retry");
+				getch();
+				system("cls");
+			}
+		} while (choice != 'Y' && choice != 'y' && choice != 'N' && choice != 'n');
+
+		if (choice == 'Y' || choice == 'y') {
+			for (i = searchIndex; i < count - 1; i++) {
+                ItemRecords[i] = ItemRecords[i + 1];
+            }
+			(count)--;
+			printf("Item successfully deleted!\n");
+			getch();
+			system("cls");
+			return;
+		}
+
+		else if (choice == 'Y' || choice == 'y') {
+			return;
+		}
+	}
+
+	if (found == 0) {
+		printf("No Result Found. Press [Enter] to proceed");
+		getch();
+		system("cls");
+	}
+}
+
+void displayType(GROCERY ItemRecords[SIZE], int count) {
+	char search[15];
+	int i, searchcheck, searchIndex;
+
+	printf("Item Type:");
+	getchar();
+    fgets(search, sizeof(search), stdin);
+    search[strcspn(search, "\n")] = '\0';
+	
+	int found = 0;
+	
+	printf("Item Type: %s\n", search);
+	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
+	for (i = 0; i < count; i++) {
+		searchcheck = strcmpi(ItemRecords[i].productType, search);
+
+		if (searchcheck == 0) {
+			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", ItemRecords[i].itemCode, ItemRecords[i].itemName, ItemRecords[i].manufacturer, ItemRecords[i].productType, ItemRecords[i].price, ItemRecords[i].currentStock);
+		}
+	}
+}
+
+void displayManufacturer(GROCERY ItemRecords[SIZE], int count) {
+	char search[15];
+	int i, searchcheck, searchIndex;
+
+	printf("Manufacturer:");
+	getchar();
+    fgets(search, sizeof(search), stdin);
+    search[strcspn(search, "\n")] = '\0';
+	
+	int found = 0;
+	
+	printf("Item Type: %s\n", search);
+	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
+	for (i = 0; i < count; i++) {
+		searchcheck = strcmpi(ItemRecords[i].manufacturer, search);
+
+		if (searchcheck == 0) {
+			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", ItemRecords[i].itemCode, ItemRecords[i].itemName, ItemRecords[i].manufacturer, ItemRecords[i].productType, ItemRecords[i].price, ItemRecords[i].currentStock);
+		}
+	}	
 }
