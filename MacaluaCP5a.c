@@ -1,3 +1,11 @@
+/* 
+Name: Franzyl Bjorn L. Macalua
+Problem is to rebuild CP3 into the same body of work but using singly-linked lists as the
+back bone of the program 
+Date Created: April 1, 2025
+Data Finished: April 9, 2025
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -20,6 +28,7 @@ int menuChoice(void);
 void addRecord(nd *head);
 void DisplayAllRecords(nd *head);
 void dataEntry(nd *head, int *itemCode, char itemName[15], char manufacturer[15], char productType[15], float *price, int *currentStock);
+// a seperate Data Entry function to make the code more readable
 void editRecord(nd *head);
 void typeSearch(nd *head);
 void nameSearch(nd *head);
@@ -28,7 +37,7 @@ void typeDelete(nd *head);
 void nameDelete(nd *head);
 void displayType(nd *head);
 void displayManufacturer(nd *head);
-
+// same function uses as CP3
 
 void menu(void) {
 	printf("MAIN MENU\n");
@@ -55,6 +64,7 @@ void addRecord(nd *head) {
 	float PRICE;
 	int STOCK;
     nd p, temp = NULL;
+    // declarations for my external pointers.
 
     if (*head == NULL) {
         *head = malloc(sizeof(GROCERY));
@@ -69,11 +79,11 @@ void addRecord(nd *head) {
         (*head)->currentStock = STOCK;
         return;
     }
-
+    // creates a new node with data when the list is empty
+	// block below deals with a pre-existing node/s
     else {
         temp = malloc(sizeof(GROCERY));
         dataEntry(head, &CODE, NAME, MANU, TYPE, &PRICE, &STOCK);
-
         temp->itemCode = CODE;
         strcpy(temp->itemName, NAME);
         strcpy(temp->manufacturer, MANU);
@@ -87,6 +97,7 @@ void addRecord(nd *head) {
             *head = temp;
             return;
         }
+        // if the Code inputed is smaller than the head's code than it should go before
 
         else {
             p = *head;
@@ -94,7 +105,7 @@ void addRecord(nd *head) {
             while (p->next != NULL && p->next->itemCode < CODE) {
                 p = p->next;
             }
-
+			// the temporary will go to where the next cell is and the cell before will link up to temp
             temp->next = p->next;
             p->next = temp;
         }
@@ -104,12 +115,30 @@ void addRecord(nd *head) {
 void DisplayAllRecords(nd *head) {
     nd h = *head, p;
     p = h;
+    int found = 0;
+    // if there is no record at all
+    if (*head == NULL) {
+		puts("Sorry, there are no records in the list. Press any key to continue");
+		getch();
+		system("cls");
+		return;
+	}
+    
 	printf("Displaying all records:\n");
 	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
 	while (p != NULL) {
 		printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
-        p = p->next;
+        found++;
+		p = p->next;
 	}
+	// a bunch of error messages
+	if (found == 0) {
+		printf("No Result Found. Press [Enter] to proceed");
+		getch();
+		system("cls");
+		return;
+	}
+	
 	printf("Press [Enter] to proceed!");
   	getch();
   	system("cls");
@@ -124,7 +153,7 @@ void dataEntry(nd *head, int *itemCode, char itemName[15], char manufacturer[15]
 	float PRICE;
 	int STOCK;
 	int duplicateCheck = 0;
-
+	// same trappings as the previous work
 	do {
         duplicateCheck = 0;
 	    printf("Item Code (10000 - 99999):");
@@ -242,6 +271,14 @@ void dataEntry(nd *head, int *itemCode, char itemName[15], char manufacturer[15]
 
 void editRecord(nd *head) {
 	int choice;
+	
+	if (*head == NULL) {
+		puts("Sorry, there are no records in the list. Press any key to continue");
+		getch();
+		system("cls");
+		return;
+	}	
+	
 	do {
 		printf("Search via Item Code or Item Name:\n");
 		printf("1. Item Type:\n");
@@ -265,14 +302,20 @@ void editRecord(nd *head) {
 void typeSearch(nd *head){
 	nd q = NULL, p = *head;
 	char search[15];
-	int i, searchcheck, searchIndex;
+	char confirmation;
+	int i, searchcheck, found = 0;;
+
+	if (*head == NULL) {
+		puts("Sorry, there are no records in the list. Press any key to continue");
+		getch();
+		system("cls");
+		return;
+	}
 
 	printf("Item Type:");
 	getchar();
     fgets(search, sizeof(search), stdin);
     search[strcspn(search, "\n")] = '\0';
-
-	int found = 0;
 
 	printf("Item Type: %s\n", search);
 	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
@@ -310,23 +353,42 @@ void typeSearch(nd *head){
 				printf("Price:");
 				scanf("%f", &price);
 				getchar();
-				q->price = price;
-					if (price <= 0) {
-						printf("Price should not be zero");
-						getch();
-						system("cls");
-					}
-				system("cls");
+				if (price <= 0) {
+					printf("Price should not be zero");
+					getch();
+					system("cls");
+				}
 			} while (price <= 0);
+			
+			puts("The new data will be saved. Do you want to continue (Y/N)?");
+			scanf(" %c", &confirmation);
+			
+			if (confirmation == 'Y' || confirmation == 'y') {
+				q->price = price;
+				system("cls");
+			}
+			else {
+				system("cls");
+				return;
+			}
 		}
-
 		else if (choice == 2) {
 			int stock;
 			printf("Stock:");
 			scanf("%d", &stock);
 			getchar();
-			q->currentStock = stock;
-			system("cls");
+			
+			puts("The new data will be saved. Do you want to continue (Y/N)?");
+			scanf(" %c", &confirmation);
+			
+			if (confirmation == 'Y' || confirmation == 'y') {
+				q->currentStock = stock;
+				system("cls");
+			}
+			else {
+				system("cls");
+				return;
+			}
 		}
 	}
 
@@ -344,26 +406,31 @@ void typeSearch(nd *head){
 
 void nameSearch(nd *head){
 	char search[15];
-    int i, searchcheck;
+	char confirmation;
+    int i, searchcheck, found = 0;
     nd p = *head;
 
+	if (*head == NULL) {
+		puts("Sorry, there are no records in the list. Press any key to continue");
+		getch();
+		system("cls");
+		return;
+	}
+
     printf("Item Name: ");
-    // using this to fix some missing characters
     fflush(stdin);
-    // swapping gets() for fgets() due to buffer issues only on this part (after finding more than 1 of the same type)
     fgets(search, sizeof(search), stdin);
     search[strcspn(search, "\n")] = '\0';
 
-	int found = 0;
-
 	printf("Item Name: %s\n", search);
 	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
-
+	// use just one pointer because I know there will be no duplicates as its trapped already
 	while (p != NULL) {
 		searchcheck = strcmpi(p->itemName, search);
 		if (searchcheck == 0) {
 			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
 			found = 1;
+			break;
 		}
 		p = p->next;
 	}
@@ -387,14 +454,25 @@ void nameSearch(nd *head){
 			do {
 				printf("Price:");
 				scanf("%f", &price);
-				p->price = price;
-					if (price <= 0) {
-						printf("Price should not be zero");
-						getch();
-						system("cls");
-					}
+				if (price <= 0) {
+					printf("Price should not be zero");
+					getch();
+					system("cls");
+				}
 				system("cls");
 			} while (price <= 0);
+			
+			puts("The new data will be saved. Do you want to continue (Y/N)?");
+			scanf(" %c", &confirmation);
+			
+			if (confirmation == 'Y' || confirmation == 'y') {
+				p->price = price;
+				system("cls");
+			}
+			else {
+				system("cls");
+				return;
+			}
 		}
 
 		if (choice == 2) {
@@ -402,8 +480,18 @@ void nameSearch(nd *head){
 			printf("Stock:");
 			scanf("%d", &stock);
 			getchar();
-			p->currentStock = stock;
-			system("cls");
+			
+			puts("The new data will be saved. Do you want to continue (Y/N)?");
+			scanf(" %c", &confirmation);
+			
+			if (confirmation == 'Y' || confirmation == 'y') {
+				p->currentStock = stock;
+				system("cls");
+			}
+			else {
+				system("cls");
+				return;
+			}
 		}
 	}
 
@@ -416,6 +504,14 @@ void nameSearch(nd *head){
 
 void deleteRecord(nd *head) {
 	int choice;
+	
+	if (*head == NULL) {
+		puts("Sorry, there are no records in the list. Press any key to continue");
+		getch();
+		system("cls");
+		return;
+	}
+	
 	do {
 		printf("Search via Item Code or Item Name:\n");
 		printf("1. Item Type:\n");
@@ -438,64 +534,63 @@ void deleteRecord(nd *head) {
 
 void typeDelete(nd *head) {
 	char search[15];
-	int i, searchcheck, searchIndex;
-	nd q = *head, p = *head;
-
+	nd p = *head;
+	nd prev = NULL;
+	nd Delete = NULL;
+	nd prevDelete = NULL;
+	int searchcheck, found = 0;
+	// setting up a main pointer as well as a previous, Delete, and previous Delete	
+	
 	printf("Item Type:");
 	getchar();
     fgets(search, sizeof(search), stdin);
     search[strcspn(search, "\n")] = '\0';
 
-	int found = 0;
-
 	printf("Item Type: %s\n", search);
 	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
 
     while (p != NULL) {
-		searchcheck = strcmpi(p->productType, search);
-		if (searchcheck == 0) {
-			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
-			found += 1;
-		}
-		q = p;
-		p = p->next;
+    	searchcheck = strcmpi(p->productType, search);
+	    if (searchcheck == 0) {
+	    	printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
+	        found++;
+	        Delete = p;
+	        // for every iteration that it goes through the current node will be the one to be deleted
+	        prevDelete = prev;
+	        // prevDelete basically acts as a delayed pointer, refering to the cell before the to be deleted node
+	    }
+	    prev = p; // previous is a node behind p
+	    p = p->next; // traverse
 	}
 
-	if (found == 1) {
-		char choice;
-		do {
-			printf("Confirm Delete (Data cannot be retrieved)? Y/n\n");
-			scanf("%c", &choice);
-			if (choice != 'Y' && choice != 'y' && choice != 'N' && choice != 'n') {
-				printf("Invalid Input, Press [Enter] to Retry");
-				getch();
-				system("cls");
-			}
-		} while (choice != 'Y' && choice != 'y' && choice != 'N' && choice != 'n');
-
-		if (choice == 'Y' || choice == 'y') {
-			if (q == NULL) {
-                *head = p->next;
-			}
-			// if first element is gonna be deleted
-			else {
-                q->next = p->next;
-			}
-			// everything else
-
-			free(p);
-			puts("Deleted!");
-			getch();
+	if (found == 1 && Delete != NULL) {
+	    char choice;
+	    printf("Confirm Delete? Y/n: ");
+	    scanf(" %c", &choice);
+	
+	    if (choice == 'Y' || choice == 'y') {
+	        if (prevDelete == NULL) {
+	            // if the head is to be deleted (previous is NULL, delete is first element)
+	            *head = Delete->next;
+	            // make the next node the head
+	        } else {
+	            prevDelete->next = Delete->next;
+	            // make the previous cell skip the deleted node, and go to the next
+	        }
+	        free(Delete);
+	        // free the memory
+	        printf("Deleted!\n");
+	        getch();
+			system("cls");
+	    }
+	    
+	    else {
 			system("cls");
 			return;
 		}
-
-		else if (choice == 'N' || choice == 'n') {
-			return;
-		}
 	}
 
-	else if (found > 1) {
+	else if (found > 1 && Delete != NULL) {
 		fflush(stdin);
 		nameDelete(head);
 	}
@@ -509,28 +604,31 @@ void typeDelete(nd *head) {
 
 void nameDelete(nd *head) {
     char search[15];
-    int i, searchcheck;
-    nd q = *head, p = *head;
+    nd p = *head;
+	nd prev = NULL;
+	nd Delete = NULL;
+	nd prevDelete = NULL;
+	int searchcheck, found = 0;
 
     printf("Item Name: ");
     fflush(stdin);
-    // swapping gets() for fgets() due to buffer issues only on this part (after finding more than 1 of the same type)
     fgets(search, sizeof(search), stdin);
     search[strcspn(search, "\n")] = '\0';
 
-	int found = 0;
-
 	printf("Item Name: %s\n", search);
 	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
-
-	while (p != NULL) {
-		searchcheck = strcmpi(p->itemName, search);
-		if (searchcheck == 0) {
-			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
-			found += 1;
-		}
-		q = p;
-		p = p->next;
+	
+	// similar logic to Type Delete
+    while (p != NULL) {
+    	searchcheck = strcmpi(p->itemName, search);
+	    if (searchcheck == 0) {
+	    	printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
+	        found++;
+	        Delete = p;
+	        prevDelete = prev;
+	    }
+	    prev = p;
+	    p = p->next;
 	}
 
 	if (found == 1) {
@@ -546,23 +644,19 @@ void nameDelete(nd *head) {
 		} while (choice != 'Y' && choice != 'y' && choice != 'N' && choice != 'n');
 
 		if (choice == 'Y' || choice == 'y') {
-			if (q == NULL) {
-                *head = p->next;
-			}
-			// if first element is gonna be deleted
-			else {
-                q->next = p->next;
-			}
-			// everything else
-
-			free(p);
-			puts("Deleted!");
-			getch();
+            if (prevDelete == NULL) {
+                *head = Delete->next; // Deleting head
+            } else {
+                prevDelete->next = Delete->next;
+            }
+	        free(Delete);
+	        printf("Deleted!\n");
+	        getch();
 			system("cls");
-			return;
 		}
 
-		else if (choice == 'N' || choice == 'n') {
+		else {
+			system("cls");
 			return;
 		}
 	}
@@ -577,7 +671,14 @@ void nameDelete(nd *head) {
 void displayType(nd *head) {
 	nd p = *head;
 	char search[15];
-	int i, searchcheck, searchIndex;
+	int i, searchcheck, found = 0;
+
+	if (*head == NULL) {
+		puts("Sorry, there are no records in the list. Press any key to continue");
+		getch();
+		system("cls");
+		return;
+	}
 
 	printf("Item Type:");
 	getchar();
@@ -592,10 +693,18 @@ void displayType(nd *head) {
 
 		if (searchcheck == 0) {
 			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
+			found++;
 		}
 		p = p->next;
 	}
 	p = *head;
+	
+	if (found == 0) {
+		printf("No Result Found. Press [Enter] to proceed");
+		getch();
+		system("cls");
+		return;
+	}
 
 	getch();
 	system("cls");
@@ -603,15 +712,21 @@ void displayType(nd *head) {
 
 void displayManufacturer(nd *head) {
 	char search[15];
-	int i, searchcheck, searchIndex;
+	int i, searchcheck, found = 0;
 	nd p = *head;
+
+	if (*head == NULL) {
+		puts("Sorry, there are no records in the list. Press any key to continue");
+		getch();
+		system("cls");
+		return;
+	}
 
 	printf("Manufacturer:");
 	getchar();
 	fflush(stdin);
     fgets(search, sizeof(search), stdin);
     search[strcspn(search, "\n")] = '\0';
-
 
 	printf("Item Type: %s\n", search);
 	printf("%-15s%-15s%-15s%-15s%-15s%-15s\n", "Item Code", "Item Name", "Manufacturer", "Product Type", "Price", "Stock");
@@ -621,10 +736,18 @@ void displayManufacturer(nd *head) {
 
 		if (searchcheck == 0) {
 			printf("%-15d%-15s%-15s%-15s%-15.2f%-15d\n", p->itemCode, p->itemName, p->manufacturer, p->productType, p->price, p->currentStock);
+			found++;
 		}
 		p = p->next;
 	}
 	p = *head;
+	
+	if (found == 0) {
+		printf("No Result Found. Press [Enter] to proceed");
+		getch();
+		system("cls");
+		return;
+	}
 
 	getch();
 	system("cls");
